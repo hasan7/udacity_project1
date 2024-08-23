@@ -1,0 +1,73 @@
+/*Question 1:*/
+
+WITH categories AS (
+  SELECT name 
+  FROM Category 
+  WHERE name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music')
+)
+SELECT 
+  f.title AS Film_Title, 
+  c.name AS Category_Name, 
+  COUNT(r.rental_id) AS Rentals_Count 
+FROM Film f 
+JOIN Film_Category fc ON f.film_id = fc.film_id 
+JOIN Category c ON fc.category_id = c.category_id 
+JOIN Inventory i ON f.film_id = i.film_id 
+JOIN Rental r ON i.inventory_id = r.inventory_id 
+WHERE c.name IN (SELECT name FROM categories)
+GROUP BY f.title, c.name 
+ORDER BY c.name, f.title;
+
+
+/*Question 2:*/
+
+SELECT
+  f.title film_title
+ ,c.name category_name
+ ,f.rental_duration AS rental_duration
+ ,NTILE(4) OVER (ORDER BY f.rental_duration) AS quartile
+FROM film f
+JOIN film_category fcat
+  ON f.film_id = fcat.film_id
+JOIN category c
+  ON c.category_id = fcat.category_id
+WHERE c.name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music')
+ORDER BY 3
+
+
+/*Question 3:*/
+
+SELECT
+  name,
+  standard_quartile,
+  COUNT(name)
+FROM (SELECT
+  c.name name,
+  NTILE(4) OVER (ORDER BY f.rental_duration) AS standard_quartile
+FROM film f
+JOIN film_category fcat
+  ON f.film_id = fcat.film_id
+JOIN category c
+  ON c.category_id = fcat.category_id
+WHERE c.name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music')) sub
+GROUP BY 1, 2
+ORDER BY 1, 2
+
+
+/*Question 4:*/
+
+SELECT
+  DATE_PART('month', r.rental_date) AS Rental_month
+ ,DATE_PART('year', r.rental_date) AS Rental_year
+ ,s.Store_id AS Store_id
+ ,COUNT(*) AS Count_rentals
+FROM store AS s
+JOIN staff AS st
+  ON s.Store_id = st.Store_id
+
+JOIN rental r
+  ON st.staff_id = r.staff_id
+GROUP BY 1
+        ,2
+        ,3
+ORDER BY 4 DESC
